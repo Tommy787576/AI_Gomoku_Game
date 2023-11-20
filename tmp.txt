@@ -1,0 +1,11 @@
+    //sf::Vector2f origin({ 3.4f, 3.4f });
+    //float offset = 41.6f, radius = 19.0f;
+    //std::vector<sf::CircleShape> pieceShapes(225, sf::CircleShape(radius));
+    //for (int x = 0; x < 15; x++) {
+    //    for (int y = 0; y < 15; y++) {
+    //        float posX = (float)(x) * offset + origin.x;
+    //        float posY = (float)(y) * offset + origin.y;
+    //        pieceShapes[x * 15 + y].setPosition(posX, posY);
+    //        pieceShapes[x * 15 + y].setFillColor(sf::Color::Transparent);
+    //    }
+    //}
