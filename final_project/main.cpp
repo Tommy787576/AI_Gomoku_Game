@@ -1,8 +1,11 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include <map>
 #include <iostream>
+
 #include "game.h"
+#include "ai.h"
 
 int main(void) {
     sf::Font font;
@@ -46,7 +49,38 @@ int main(void) {
         }
     }
 
+    std::map<Role, Player> role2Player{
+        {Role::Black, Player::RandomAI},
+        {Role::White, Player::Human}
+    };
+    AI blackAI, whiteAI;
+    if (role2Player[Role::Black] != Player::Human)
+        blackAI.setPlayer(role2Player[Role::Black]);
+    if (role2Player[Role::White] != Player::Human)
+        whiteAI.setPlayer(role2Player[Role::White]);
+    bool isPut = false; // only one piece is added in a single loop
+
     while (window.isOpen()) {
+        window.clear();
+        window.draw(boardSprite);
+        for (int x = 0; x < game.getWidthP(); x++)
+            for (int y = 0; y < game.getHeightP(); y++)
+                window.draw(displayBoard[x][y]);
+
+        if (isPut) {
+            isPut = false;
+            game.switchRole();
+        }
+        if (game.getWinner() == Role::Black) {
+            text.setString(L"黑棋勝利!");
+            window.draw(text);
+        }
+        else if (game.getWinner() == Role::White) {
+            text.setString(L"白棋勝利!");
+            window.draw(text);
+        }
+        window.display();
+
         sf::Event event;
         while (window.pollEvent(event)) {
             switch (event.type) {
@@ -58,6 +92,10 @@ int main(void) {
                     break;
                 if (event.key.code == sf::Keyboard::Key::Enter) {
                     // restart the game
+                    window.clear();
+                    window.draw(boardSprite);
+                    window.display();
+
                     game = Game();
                     for (int x = 0; x < game.getWidthP(); x++)
                         for (int y = 0; y < game.getHeightP(); y++)
@@ -69,22 +107,26 @@ int main(void) {
             case sf::Event::MouseButtonPressed:
                 if (game.isGameSet())
                     break;
-                bool isFind = false;
-                for (int x = 0; x < game.getWidthP() && !isFind; x++) {
-                    for (int y = 0; y < game.getHeightP() && !isFind; y++) {
+                if (isPut)
+                    break;
+                if (role2Player[game.getCurrRole()] != Player::Human)
+                    break;
+                for (int x = 0; x < game.getWidthP() && !isPut; x++) {
+                    for (int y = 0; y < game.getHeightP() && !isPut; y++) {
                         if (displayBoard[x][y].getGlobalBounds().contains(
                             sf::Vector2f(sf::Mouse::getPosition(window)))) {
-                            isFind = true;
                             Role check = game.setPiece(x, y);
                             if (check == Role::Black) {
                                 displayBoard[x][y].setFillColor(
                                     sf::Color::Black
                                 );
+                                isPut = true;
                             }
                             else if (check == Role::White) {
                                 displayBoard[x][y].setFillColor(
                                     sf::Color::White
                                 );
+                                isPut = true;
                             }
                         }
                     }
@@ -92,21 +134,28 @@ int main(void) {
                 break;
             }
         }
-
-        window.clear();
-        window.draw(boardSprite);
-        for (int x = 0; x < game.getWidthP(); x++)
-            for (int y = 0; y < game.getHeightP(); y++)
-                window.draw(displayBoard[x][y]);
-        if (game.getWinner() == Role::Black) {
-            text.setString(L"黑棋勝利!");
-            window.draw(text);
+        if (!isPut && !game.isGameSet() &&
+            role2Player[game.getCurrRole()] != Player::Human) {
+            std::pair<int, int> nxtPos;
+            if (game.getCurrRole() == Role::White)
+                nxtPos = whiteAI.getNextPos(game);
+            else
+                nxtPos = blackAI.getNextPos(game);
+            int x = nxtPos.first, y = nxtPos.second;
+            Role check = game.setPiece(x, y);
+            if (check == Role::Black) {
+                displayBoard[x][y].setFillColor(
+                    sf::Color::Black
+                );
+                isPut = true;
+            }
+            else if (check == Role::White) {
+                displayBoard[x][y].setFillColor(
+                    sf::Color::White
+                );
+                isPut = true;
+            }
         }
-        else if (game.getWinner() == Role::White) {
-            text.setString(L"白棋勝利!");
-            window.draw(text);
-        }
-        window.display();
     }
 
 	return EXIT_SUCCESS;

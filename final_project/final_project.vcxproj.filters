@@ -26,5 +26,8 @@
     <ClInclude Include="game.h">
       <Filter>來源檔案</Filter>
     </ClInclude>
+    <ClInclude Include="ai.h">
+      <Filter>來源檔案</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
